@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Order Confirmed — L'Essence Luxury Perfumes">
+    <title>Order Confirmed — L'Essence</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+        <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+
+<body>
+
+    
+    <nav class="navbar navbar-expand-lg navbar-luxury fixed-top" id="main-navbar"></nav>
+
+    
+    <section class="confirmation-section">
+        <div class="container">
+            <div id="confirmation-content">
+                
+            </div>
+        </div>
+    </section>
+
+    
+    <footer class="footer-luxury" id="main-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { Auth, Cart, UI } from '../js/app.js';
+
+        Auth.protect();
+
+        let orderData = JSON.parse(localStorage.getItem('perfume_last_order'));
+        let container = document.getElementById('confirmation-content');
+
+        if (!orderData) {
+            container.innerHTML = `
+                <div class="text-center">
+                    <h2>No Order Found</h2>
+                    <p class="text-muted">It looks like you haven't placed an order yet.</p>
+                    <a href="index.html" class="btn btn-gold"><span>Go Shopping</span></a>
+                </div>`;
+        } else {
+            Cart.clear();
+            let deliveryStart = new Date();
+            deliveryStart.setDate(deliveryStart.getDate() + 5);
+            let deliveryEnd = new Date();
+            deliveryEnd.setDate(deliveryEnd.getDate() + 7);
+            let options = { month: 'long', day: 'numeric', year: 'numeric' };
+            let deliveryRange = `${deliveryStart.toLocaleDateString('en-US', options)} — ${deliveryEnd.toLocaleDateString('en-US', options)}`;
+            let itemsHtml = '';
+            orderData.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-review-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="item-details">
+                            <h6>${item.name}</h6>
+                            <small>${item.volume}ml — Qty: ${item.qty}</small>
+                        </div>
+                        <div class="item-price">${UI.formatPrice(item.price * item.qty)}</div>
+                    </div>`;
+            });
+
+            container.innerHTML = `
+                <div class="checkmark-circle">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h1>Order Confirmed!</h1>
+                <p class="order-number">Order #${orderData.orderId}</p>
+                <p class="text-muted mb-4">Thank you for your purchase. A confirmation has been sent to your email.</p>
+
+                <div class="order-summary-card">
+                    <h5>Items Ordered</h5>
+                    ${itemsHtml}
+                    <hr>
+                    <div class="d-flex justify-content-between mb-1"><span>Subtotal</span><span>${UI.formatPrice(orderData.subtotal)}</span></div>
+                    <div class="d-flex justify-content-between mb-1"><span>Shipping</span><span>${orderData.shipping === 0 ? 'Free' : UI.formatPrice(orderData.shipping)}</span></div>
+                    <div class="d-flex justify-content-between fw-bold mt-2 pt-2" style="border-top:2px solid var(--color-black);">
+                        <span>Total</span><span>${UI.formatPrice(orderData.total)}</span>
+                    </div>
+                </div>
+
+                <div class="order-summary-card">
+                    <h5>Shipping Details</h5>
+                    <p class="mb-1"><strong>${orderData.shippingAddress.name}</strong></p>
+                    <p class="mb-1 text-muted">${orderData.shippingAddress.address}</p>
+                    <p class="mb-1 text-muted">${orderData.shippingAddress.city}, ${orderData.shippingAddress.country} ${orderData.shippingAddress.zip}</p>
+                    <p class="mt-3 mb-0"><strong>Estimated Delivery:</strong> ${deliveryRange}</p>
+                </div>
+
+                <div class="order-summary-card">
+                    <h5>Payment</h5>
+                    <p class="mb-0">${orderData.paymentMethod}</p>
+                </div>
+
+                <a href="index.html" class="btn btn-gold mt-3"><span><i class="bi bi-house me-2"></i>Back to Home</span></a>`;
+        }
+    </script>
+</body>
+
+</html>
