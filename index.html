@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="L'Essence — Luxury Perfume E-Commerce. Discover our curated collection of fine fragrances.">
+    <title>L'Essence — Luxury Perfumes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+        <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+<link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/responsive.css">
+</head>
+
+<body>
+
+    <div class="announcement-bar" id="announcement-bar">
+        <button class="btn-close-banner" id="close-announcement">&times;</button>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-luxury fixed-top" id="main-navbar"></nav>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>The Art of Fragrance</h1>
+            <p>Discover handcrafted scents that tell your story. Each bottle is a journey through rare ingredients and
+                timeless elegance.</p>
+            <a href="#collection" class="btn btn-gold"><span>Explore Collection</span></a>
+        </div>
+    </section>
+
+    <section class="featured-slider">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="text-cream">Bestsellers</h2>
+                <p class="text-cream" style="opacity:0.6;">Our most coveted creations</p>
+            </div>
+            <div class="custom-slider" id="customSlider">
+                <div class="slider-track" id="slider-track"></div>
+                <button class="slider-btn slider-btn-prev" id="slider-prev"
+                    aria-label="Previous slide">&#10094;</button>
+                <button class="slider-btn slider-btn-next" id="slider-next" aria-label="Next slide">&#10095;</button>
+                <div class="slider-dots" id="slider-dots"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="collection">
+        <div class="container">
+            <div class="section-title reveal">
+                <h2>Our Collection</h2>
+                <p>Explore our curated selection of luxury fragrances</p>
+            </div>
+
+            <div class="filter-bar reveal" id="filter-bar">
+                <button class="filter-btn active" data-category="All">All</button>
+                <button class="filter-btn" data-category="Men">Men</button>
+                <button class="filter-btn" data-category="Women">Women</button>
+                <button class="filter-btn" data-category="Unisex">Unisex</button>
+                <button class="filter-btn" data-category="Limited Edition">Limited Edition</button>
+            </div>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 product-grid" id="product-grid"></div>
+        </div>
+    </section>
+    <footer class="footer-luxury" id="main-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { Auth, Cart, UI, Products, Wishlist } from './js/app.js';
+        Auth.protect();
+        let featured = Products.getAll().filter(p => p.rating >= 4.7);
+        let sliderTrack = document.getElementById('slider-track');
+        let sliderDots = document.getElementById('slider-dots');
+        let btnPrev = document.getElementById('slider-prev');
+        let btnNext = document.getElementById('slider-next');
+        let slider = document.getElementById('customSlider');
+        let currentSlide = 0;
+        let autoPlayTimer = null;
+        featured.forEach((product, index) => {
+            let slide = document.createElement('div');
+            slide.className = 'slider-slide';
+            slide.innerHTML = `
+                <div class="featured-slide-content">
+                    <div class="featured-slide-img">
+                        <img src="${product.images[0]}" alt="${product.name}">
+                    </div>
+                    <div class="featured-slide-info">
+                        ${product.category === 'Limited Edition' ? '<span class="badge-limited">Limited Edition</span>' : ''}
+                        <h3>${product.name}</h3>
+                        <div class="price">${UI.formatPrice(product.price)}</div>
+                        <p>${product.description}</p>
+                        <a href="pages/product.html?id=${product.id}" class="btn btn-outline-gold">Shop Now</a>
+                    </div>
+                </div>`;
+            sliderTrack.appendChild(slide);
+            let dot = document.createElement('button');
+            dot.className = `slider-dot${index === 0 ? ' active' : ''}`;
+            dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+            dot.addEventListener('click', () => goToSlide(index));
+            sliderDots.appendChild(dot);
+        });
+
+        function goToSlide(index) {
+            currentSlide = index;
+            sliderTrack.style.transform = `translateX(-${index * 100}%)`;
+            sliderDots.querySelectorAll('.slider-dot').forEach((d, i) => {
+                d.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            goToSlide((currentSlide + 1) % featured.length);
+        }
+
+        function prevSlide() {
+            goToSlide((currentSlide - 1 + featured.length) % featured.length);
+        }
+        btnNext.addEventListener('click', nextSlide);
+        btnPrev.addEventListener('click', prevSlide);
+        function startAutoPlay() {
+            stopAutoPlay();
+            autoPlayTimer = setInterval(nextSlide, 5000);
+        }
+        function stopAutoPlay() {
+            if (autoPlayTimer) clearInterval(autoPlayTimer);
+        }
+        startAutoPlay();
+        slider.addEventListener('mouseenter', stopAutoPlay);
+        slider.addEventListener('mouseleave', startAutoPlay);
+        let touchStartX = 0;
+        let touchEndX = 0;
+        slider.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        slider.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            let diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                diff > 0 ? nextSlide() : prevSlide();
+            }
+        }, { passive: true });
+        slider.setAttribute('tabindex', '0');
+        slider.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+        let productGrid = document.getElementById('product-grid');
+
+        function renderProducts(category = 'All') {
+            let items = Products.getByCategory(category);
+            let existingCols = productGrid.querySelectorAll('.col');
+            existingCols.forEach(col => col.classList.add('hiding'));
+
+            setTimeout(() => {
+                productGrid.innerHTML = '';
+                items.forEach(product => {
+                    let col = document.createElement('div');
+                    col.className = 'col reveal';
+                    col.innerHTML = `
+                        <div class="product-card">
+                            <div class="product-card-img">
+                                <img src="${product.images[0]}" alt="${product.name}">
+                                <button class="btn-wishlist ${Wishlist.contains(product.id) ? 'active' : ''}" 
+                                        data-wishlist-id="${product.id}">
+                                    <i class="bi bi-heart${Wishlist.contains(product.id) ? '-fill' : ''}"></i>
+                                </button>
+                                <div class="product-card-overlay">
+                                    <a href="pages/product.html?id=${product.id}" class="btn-view">View Details</a>
+                                </div>
+                            </div>
+                            <div class="product-card-body">
+                                <span class="brand">${product.brand}</span>
+                                <h5>${product.name}</h5>
+                                <div class="rating">${UI.starsHTML(product.rating)} <small>(${product.rating})</small></div>
+                                <div class="price">${UI.formatPrice(product.price)}</div>
+                                <button class="btn-add-cart" data-id="${product.id}" data-volume="${product.volumes[0]}">
+                                    <i class="bi bi-bag-plus me-1"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>`;
+                    productGrid.appendChild(col);
+                });
+                UI.initScrollReveal();
+                productGrid.querySelectorAll('.btn-add-cart').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        let id = parseInt(btn.dataset.id);
+                        let volume = parseInt(btn.dataset.volume);
+                        Cart.addItem(id, volume);
+                    });
+                });
+                productGrid.querySelectorAll('.btn-wishlist').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        let id = parseInt(btn.dataset.wishlistId);
+                        Wishlist.toggle(id);
+                    });
+                });
+            }, 300);
+        }
+        renderProducts();
+        document.getElementById('filter-bar').addEventListener('click', (e) => {
+            if (!e.target.classList.contains('filter-btn')) return;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderProducts(e.target.dataset.category);
+        });
+    </script>
+</body>
+
+</html>
