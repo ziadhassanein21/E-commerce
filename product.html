@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Product Details — L'Essence Luxury Perfumes">
+    <title>Product — L'Essence</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+        <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+<link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/responsive.css">
+</head>
+
+<body>
+
+    
+    <nav class="navbar navbar-expand-lg navbar-luxury fixed-top" id="main-navbar"></nav>
+
+    
+    <section class="product-detail-section">
+        <div class="container">
+            <div class="row g-5" id="product-detail">
+                
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="section-padding bg-white">
+        <div class="container">
+            <div class="section-title">
+                <h2>You May Also Like</h2>
+                <p>Explore similar fragrances from our collection</p>
+            </div>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4" id="related-products"></div>
+        </div>
+    </section>
+
+    
+    <footer class="footer-luxury" id="main-footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { Auth, Cart, UI, Products, Wishlist } from './js/app.js';
+
+        Auth.protect();
+        let params = new URLSearchParams(window.location.search);
+        let productId = params.get('id');
+        let product = Products.getById(productId);
+
+        if (!product) {
+            document.getElementById('product-detail').innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <h2>Product Not Found</h2>
+                    <p>The product you're looking for doesn't exist.</p>
+                    <a href="index.html" class="btn btn-gold"><span>Back to Shop</span></a>
+                </div>`;
+        } else {
+            document.title = `${product.name} — L'Essence`;
+            let breadcrumbHTML = `
+                <div class="col-12">
+                    <div class="product-breadcrumb">
+                        <a href="index.html">Home</a>
+                        <span class="separator">›</span>
+                        <a href="index.html#collection">Collection</a>
+                        <span class="separator">›</span>
+                        <span class="current">${product.name}</span>
+                    </div>
+                </div>`;
+            let detailContainer = document.getElementById('product-detail');
+            let thumbs = product.images.map((img, i) =>
+                `<img src="${img}" alt="View ${i + 1}" class="${i === 0 ? 'active' : ''}" data-index="${i}">`
+            ).join('');
+            let volumeButtons = product.volumes.map((v, i) =>
+                `<button class="volume-btn ${i === 0 ? 'active' : ''}" data-volume="${v}">${v}ml</button>`
+            ).join('');
+
+            detailContainer.innerHTML = `
+                ${breadcrumbHTML}
+
+                
+                <div class="col-lg-6">
+                    <div class="product-gallery">
+                        <img src="${product.images[0]}" alt="${product.name}" class="main-image" id="main-image">
+                        <div class="thumb-strip">${thumbs}</div>
+                    </div>
+                </div>
+
+                
+                <div class="col-lg-6">
+                    <div class="product-info">
+                        <p class="brand-label">${product.brand}</p>
+                        <h1>${product.name}</h1>
+                        <div class="rating mb-3">${UI.starsHTML(product.rating)} <small class="text-muted ms-1">(${product.rating})</small></div>
+                        <div class="price-tag">${UI.formatPrice(product.price)}</div>
+                        <p class="description">${product.description}</p>
+
+                        <label class="option-label">Volume</label>
+                        <div class="volume-options">${volumeButtons}</div>
+
+                        <label class="option-label">Quantity</label>
+                        <div class="quantity-selector">
+                            <button id="qty-minus">−</button>
+                            <input type="number" id="qty-input" value="1" min="1" readonly>
+                            <button id="qty-plus">+</button>
+                        </div>
+
+                        <button class="btn btn-gold w-100" id="btn-add-to-cart"><span><i class="bi bi-bag-plus me-2"></i>Add to Cart</span></button>
+                        <button class="btn btn-outline-gold w-100 mt-2" id="btn-wishlist-detail" data-wishlist-id="${product.id}">
+                            <i class="bi bi-heart${Wishlist.contains(product.id) ? '-fill' : ''} me-2"></i>
+                            ${Wishlist.contains(product.id) ? 'In Wishlist' : 'Add to Wishlist'}
+                        </button>
+
+                        <div class="fragrance-profile">
+                            <h6 class="fp-title">Fragrance Profile</h6>
+                            <div class="fragrance-notes">
+                                <div class="note-item">
+                                    <div class="note-icon top"><i class="bi bi-brightness-high"></i></div>
+                                    <div>
+                                        <span class="note-label">Top Notes</span>
+                                        <span class="note-value">${product.details.topNotes}</span>
+                                    </div>
+                                </div>
+                                <div class="note-item">
+                                    <div class="note-icon heart"><i class="bi bi-flower1"></i></div>
+                                    <div>
+                                        <span class="note-label">Heart Notes</span>
+                                        <span class="note-value">${product.details.heartNotes}</span>
+                                    </div>
+                                </div>
+                                <div class="note-item">
+                                    <div class="note-icon base"><i class="bi bi-tree"></i></div>
+                                    <div>
+                                        <span class="note-label">Base Notes</span>
+                                        <span class="note-value">${product.details.baseNotes}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="performance-stats">
+                                <div class="perf-stat">
+                                    <span class="perf-label">Longevity</span>
+                                    <span class="perf-value">${product.details.longevity}</span>
+                                </div>
+                                <div class="perf-stat">
+                                    <span class="perf-label">Sillage</span>
+                                    <span class="perf-value">${product.details.sillage}</span>
+                                </div>
+                                <div class="perf-stat">
+                                    <span class="perf-label">Concentration</span>
+                                    <span class="perf-value">${product.details.concentration}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            let zoomOverlay = document.createElement('div');
+            zoomOverlay.className = 'image-zoom-overlay';
+            zoomOverlay.innerHTML = `
+                <button class="image-zoom-close" aria-label="Close zoom">&times;</button>
+                <img src="${product.images[0]}" alt="${product.name}" id="zoom-image">`;
+            document.body.appendChild(zoomOverlay);
+
+            document.getElementById('main-image').addEventListener('click', () => {
+                document.getElementById('zoom-image').src = document.getElementById('main-image').src;
+                zoomOverlay.classList.add('active');
+            });
+
+            zoomOverlay.addEventListener('click', (e) => {
+                if (e.target === zoomOverlay || e.target.classList.contains('image-zoom-close')) {
+                    zoomOverlay.classList.remove('active');
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') zoomOverlay.classList.remove('active');
+            });
+            document.querySelectorAll('.thumb-strip img').forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    document.getElementById('main-image').src = thumb.src;
+                    document.querySelectorAll('.thumb-strip img').forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                });
+            });
+            let selectedVolume = product.volumes[0];
+            document.querySelectorAll('.volume-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.volume-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedVolume = parseInt(btn.dataset.volume);
+                });
+            });
+            let quantity = 1;
+            let qtyInput = document.getElementById('qty-input');
+            document.getElementById('qty-minus').addEventListener('click', () => {
+                if (quantity > 1) {
+                    quantity--;
+                    qtyInput.value = quantity;
+                }
+            });
+            document.getElementById('qty-plus').addEventListener('click', () => {
+                quantity++;
+                qtyInput.value = quantity;
+            });
+            document.getElementById('btn-add-to-cart').addEventListener('click', () => {
+                Cart.addItem(product.id, selectedVolume, quantity);
+            });
+            document.getElementById('btn-wishlist-detail').addEventListener('click', function () {
+                Wishlist.toggle(product.id);
+                let inWish = Wishlist.contains(product.id);
+                this.innerHTML = `<i class="bi bi-heart${inWish ? '-fill' : ''} me-2"></i>${inWish ? 'In Wishlist' : 'Add to Wishlist'}`;
+            });
+            let related = Products.getByCategory(product.category)
+                .filter(p => p.id !== product.id)
+                .slice(0, 4);
+            if (related.length < 4) {
+                let extras = Products.getAll()
+                    .filter(p => p.id !== product.id && !related.find(r => r.id === p.id))
+                    .slice(0, 4 - related.length);
+                related.push(...extras);
+            }
+
+            let relatedContainer = document.getElementById('related-products');
+            related.forEach(rp => {
+                let col = document.createElement('div');
+                col.className = 'col';
+                col.innerHTML = `
+                    <div class="product-card">
+                        <div class="product-card-img">
+                            <img src="${rp.images[0]}" alt="${rp.name}">
+                            <button class="btn-wishlist ${Wishlist.contains(rp.id) ? 'active' : ''}" 
+                                    data-wishlist-id="${rp.id}">
+                                <i class="bi bi-heart${Wishlist.contains(rp.id) ? '-fill' : ''}"></i>
+                            </button>
+                            <div class="product-card-overlay">
+                                <a href="product.html?id=${rp.id}" class="btn-view">View Details</a>
+                            </div>
+                        </div>
+                        <div class="product-card-body">
+                            <span class="brand">${rp.brand}</span>
+                            <h5>${rp.name}</h5>
+                            <div class="rating">${UI.starsHTML(rp.rating)}</div>
+                            <div class="price">${UI.formatPrice(rp.price)}</div>
+                            <button class="btn-add-cart" data-id="${rp.id}" data-volume="${rp.volumes[0]}">
+                                <i class="bi bi-bag-plus me-1"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>`;
+                relatedContainer.appendChild(col);
+            });
+            relatedContainer.querySelectorAll('.btn-add-cart').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    Cart.addItem(parseInt(btn.dataset.id), parseInt(btn.dataset.volume));
+                });
+            });
+            relatedContainer.querySelectorAll('.btn-wishlist').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    Wishlist.toggle(parseInt(btn.dataset.wishlistId));
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
