@@ -207,5 +207,4 @@ export const products = [
             concentration: "Eau de Parfum"
         }
     }
-],
-
+];
